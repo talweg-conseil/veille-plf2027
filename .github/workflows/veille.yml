@@ -1,0 +1,33 @@
+name: Veille amendements PLF 2027
+
+on:
+  schedule:
+    - cron: "30 4 * * *"   # chaque jour à 4h30 UTC (6h30 heure de Paris l'été, 5h30 l'hiver)
+  workflow_dispatch:         # bouton "Run workflow" pour lancer à la main
+
+permissions:
+  contents: write
+
+jobs:
+  filtre:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Installer les dépendances
+        run: pip install requests
+
+      - name: Filtrer les amendements
+        run: python filtre_amendements.py
+
+      - name: Publier les résultats
+        run: |
+          git config user.name "veille-bot"
+          git config user.email "veille-bot@users.noreply.github.com"
+          git add data/
+          git commit -m "Mise à jour amendements $(date -u +%F)" || echo "Aucun changement"
+          git push
