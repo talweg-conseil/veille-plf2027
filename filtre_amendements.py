@@ -135,28 +135,48 @@ def blocs_notion(titre, morceaux):
     return blocs
 
 
+# Identifiants des propriétés Notion de la base "Veille amendements PLF 2027".
+# On utilise les identifiants et non les noms : renommer une colonne dans Notion
+# ne casse donc plus la synchronisation. (Nom actuel indiqué en commentaire.)
+P = {
+    "titre": "title",       # Titre
+    "uid": "cKIo",          # UID AN
+    "numero": "V|zK",       # N° amendement
+    "instance": "LYp=",     # Instance
+    "article": "<>Iq",      # Article visé
+    "auteurs": "_\\gF",     # Auteur(s)
+    "groupe": "q}iE",       # Groupe
+    "dispositifs": "vmP_",  # Dispositifs détectés
+    "portee": "Dht]",       # Portée
+    "sort": "rZHo",         # Sort
+    "date_depot": "iPRZ",   # Date de dépôt
+    "synchro": "AXfC",      # Dernière synchro
+    "lien": "kP^I",         # Lien vers l'amendement
+}
+
+
 def proprietes_notion(f, aujourd_hui):
     """Propriétés de la page Notion au format API (chaîne JSON injectée telle quelle par Make).
-    "Analyse Talweg" n'est jamais envoyée : les saisies manuelles sont préservées."""
+    Les champs saisis à la main (Analyse Talweg, Catégories, Pertinence) ne sont jamais envoyés."""
     def texte(t):
         return {"rich_text": [{"text": {"content": (t or "")[:1900]}}]}
     p = {
-        "Titre": {"title": [{"text": {"content": f["titre"][:1900]}}]},
-        "UID AN": texte(f["uid"]),
-        "Numéro": texte(f["numero"]),
-        "Instance": {"select": {"name": f["instance"]}},
-        "Article visé": texte(f["article"]),
-        "Auteur(s)": texte(f["auteurs"]),
-        "Dispositifs détectés": {"multi_select": [{"name": t} for t in f["dispositifs"]]},
-        "Portée": {"select": {"name": f["portee"]}},
-        "Sort": {"select": {"name": f["sort"]}},
-        "Dernière synchro": {"date": {"start": aujourd_hui}},
-        "Lien AN": {"url": f["lien"]},
+        P["titre"]: {"title": [{"text": {"content": f["titre"][:1900]}}]},
+        P["uid"]: texte(f["uid"]),
+        P["numero"]: texte(f["numero"]),
+        P["instance"]: {"select": {"name": f["instance"]}},
+        P["article"]: texte(f["article"]),
+        P["auteurs"]: texte(f["auteurs"]),
+        P["dispositifs"]: {"multi_select": [{"name": t} for t in f["dispositifs"]]},
+        P["portee"]: {"select": {"name": f["portee"]}},
+        P["sort"]: {"select": {"name": f["sort"]}},
+        P["synchro"]: {"date": {"start": aujourd_hui}},
+        P["lien"]: {"url": f["lien"]},
     }
     if f["groupe"]:
-        p["Groupe"] = {"select": {"name": f["groupe"]}}
+        p[P["groupe"]] = {"select": {"name": f["groupe"]}}
     if f["date_depot"]:
-        p["Date de dépôt"] = {"date": {"start": f["date_depot"]}}
+        p[P["date_depot"]] = {"date": {"start": f["date_depot"]}}
     return json.dumps(p, ensure_ascii=False)
 
 
