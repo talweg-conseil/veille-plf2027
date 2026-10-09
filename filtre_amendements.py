@@ -33,6 +33,9 @@ import requests
 
 URL_ZIP = ("https://data.assemblee-nationale.fr/static/openData/repository/"
            "17/loi/amendements_div_legis/Amendements.json.zip")
+URL_DEPUTES = ("https://data.assemblee-nationale.fr/static/openData/repository/"
+               "17/amo/deputes_actifs_mandats_actifs_organes/"
+               "AMO10_deputes_actifs_mandats_actifs_organes.json.zip")
 NUM_TEXTE = "3210"   # PLF 2027
 JOURS_DELTA = 3      # le delta couvre les modifications des 3 derniers jours
 TAILLE_BLOC = 1900   # limite Notion : 2000 caractères par bloc de texte
@@ -134,7 +137,7 @@ def blocs_notion(titre, morceaux):
 
 def proprietes_notion(f, aujourd_hui):
     """Propriétés de la page Notion au format API (chaîne JSON injectée telle quelle par Make).
-    "Analyse Talweg" et "Groupe" ne sont jamais envoyés : les saisies manuelles sont préservées."""
+    "Analyse Talweg" n'est jamais envoyée : les saisies manuelles sont préservées."""
     def texte(t):
         return {"rich_text": [{"text": {"content": (t or "")[:1900]}}]}
     p = {
@@ -150,6 +153,8 @@ def proprietes_notion(f, aujourd_hui):
         "Dernière synchro": {"date": {"start": aujourd_hui}},
         "Lien AN": {"url": f["lien"]},
     }
+    if f["groupe"]:
+        p["Groupe"] = {"select": {"name": f["groupe"]}}
     if f["date_depot"]:
         p["Date de dépôt"] = {"date": {"start": f["date_depot"]}}
     return json.dumps(p, ensure_ascii=False)
@@ -200,6 +205,60 @@ def telecharger():
     return chemin
 
 
+# Référentiels des groupes politiques (remplis par charger_groupes)
+GROUPES = {}        # PO... -> sigle du groupe (ex. "RN", "EPR")
+GROUPE_DEPUTE = {}  # PA... -> PO... du groupe actuel du député
+
+
+def charger_groupes():
+    """Charge les groupes politiques depuis l'open data AN (députés en exercice).
+    En cas d'échec, le script continue : la propriété Groupe reste simplement vide."""
+    try:
+        print("Téléchargement du référentiel des groupes politiques...")
+        chemin = Path(tempfile.gettempdir()) / "deputes_an.zip"
+        r = requests.get(URL_DEPUTES, timeout=300)
+        r.raise_for_status()
+        chemin.write_bytes(r.content)
+        with zipfile.ZipFile(chemin) as zf:
+            for nom in zf.namelist():
+                if not nom.endswith(".json"):
+                    continue
+                with zf.open(nom) as f:
+                    brut = json.load(f)
+                if "organe" in brut:
+                    o = brut["organe"]
+                    if chaine(lire(o, "codeType")) == "GP":
+                        sigle = (chaine(lire(o, "libelleAbrev")) or chaine(lire(o, "libelleAbrege"))
+                                 or chaine(lire(o, "libelle")))
+                        GROUPES[chaine(lire(o, "uid"))] = sigle.replace(",", " ")
+                elif "acteur" in brut:
+                    act = brut["acteur"]
+                    uid = lire(act, "uid")
+                    uid = chaine(uid.get("#text")) if isinstance(uid, dict) else chaine(uid)
+                    mandats = lire(act, "mandats", "mandat") or []
+                    if isinstance(mandats, dict):
+                        mandats = [mandats]
+                    for m in mandats:
+                        if chaine(lire(m, "typeOrgane")) == "GP" and not lire(m, "dateFin"):
+                            GROUPE_DEPUTE[uid] = chaine(lire(m, "organes", "organeRef"))
+        print(f"  {len(GROUPES)} groupes, {len(GROUPE_DEPUTE)} députés rattachés")
+    except Exception as e:  # le référentiel est un bonus, jamais bloquant
+        print(f"  Référentiel des groupes indisponible ({e}) : propriété Groupe laissée vide")
+
+
+def groupe(a):
+    auteur = lire(a, "signataires", "auteur") or {}
+    type_auteur = normaliser(chaine(lire(auteur, "typeAuteur")))
+    ref = chaine(lire(auteur, "groupePolitiqueRef")) or GROUPE_DEPUTE.get(chaine(lire(auteur, "acteurRef")), "")
+    if ref in GROUPES:
+        return GROUPES[ref]
+    if "gouvernement" in type_auteur:
+        return "Gouvernement"
+    if "rapporteur" in type_auteur or "commission" in type_auteur:
+        return "Commission"
+    return None
+
+
 def extraire(a):
     """Transforme un amendement brut AN en fiche prête pour Notion."""
     uid = chaine(lire(a, "uid"))
@@ -226,6 +285,7 @@ def extraire(a):
         "instance": instance(numero),
         "article": article,
         "auteurs": auteurs[:1900],
+        "groupe": groupe(a),
         "dispositifs": tags,
         "portee": portee,
         "sort": statut(a),
@@ -242,13 +302,15 @@ def extraire(a):
 
 
 def empreinte(fiche):
-    cles = ("numero", "sort", "article", "dispositif_blocs", "expose_blocs", "auteurs")
+    cles = ("numero", "sort", "article", "dispositif_blocs", "expose_blocs", "auteurs", "groupe")
     brut = json.dumps({k: fiche[k] for k in cles}, ensure_ascii=False, sort_keys=True)
     return hashlib.md5(brut.encode("utf-8")).hexdigest()
 
 
 def main():
     chemin_zip = Path(sys.argv[1]) if len(sys.argv) > 1 else telecharger()
+    if len(sys.argv) <= 1:
+        charger_groupes()
     aujourd_hui = dt.date.today().isoformat()
 
     # Base précédente : sert à repérer ce qui est nouveau ou a changé
