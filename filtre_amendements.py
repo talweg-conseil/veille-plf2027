@@ -21,6 +21,7 @@ import json
 import re
 import sys
 import tempfile
+import time
 import unicodedata
 import zipfile
 from pathlib import Path
@@ -213,16 +214,36 @@ def instance(numero):
 # ---------------------------------------------------------------------------
 
 
+TENTATIVES = 4  # nombre d'essais de téléchargement avant abandon
+
+
 def telecharger():
-    print("Téléchargement de l'open data AN...")
+    """Télécharge le zip des amendements, avec plusieurs essais :
+    le serveur de l'AN coupe parfois la connexion en cours de transfert."""
     chemin = Path(tempfile.gettempdir()) / "amendements_an.zip"
-    with requests.get(URL_ZIP, stream=True, timeout=900) as r:
-        r.raise_for_status()
-        with open(chemin, "wb") as f:
-            for morceau in r.iter_content(chunk_size=1 << 20):
-                f.write(morceau)
-    print(f"  {chemin.stat().st_size / 1e6:.0f} Mo téléchargés")
-    return chemin
+    for essai in range(1, TENTATIVES + 1):
+        try:
+            print(f"Téléchargement de l'open data AN (essai {essai}/{TENTATIVES})...")
+            with requests.get(URL_ZIP, stream=True, timeout=900) as r:
+                r.raise_for_status()
+                attendu = int(r.headers.get("Content-Length") or 0)
+                with open(chemin, "wb") as f:
+                    for morceau in r.iter_content(chunk_size=1 << 20):
+                        f.write(morceau)
+            recu = chemin.stat().st_size
+            if attendu and recu != attendu:
+                raise IOError(f"fichier incomplet ({recu} octets sur {attendu})")
+            if not zipfile.is_zipfile(chemin):
+                raise IOError("le fichier reçu n'est pas un zip valide")
+            print(f"  {recu / 1e6:.0f} Mo téléchargés")
+            return chemin
+        except (requests.RequestException, IOError) as e:
+            print(f"  Échec : {e}")
+            if essai == TENTATIVES:
+                raise
+            attente = 60 * essai
+            print(f"  Nouvel essai dans {attente} s")
+            time.sleep(attente)
 
 
 # Référentiels des groupes politiques (remplis par charger_groupes)
