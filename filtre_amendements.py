@@ -247,8 +247,9 @@ def telecharger():
 
 
 # Référentiels des groupes politiques (remplis par charger_groupes)
-GROUPES = {}        # PO... -> sigle du groupe (ex. "RN", "EPR")
+GROUPES = {}        # PO... -> "EPR - Ensemble pour la République"
 GROUPE_DEPUTE = {}  # PA... -> PO... du groupe actuel du député
+NOMS = {}           # PA... -> "M. Paul Midy"
 
 
 def charger_groupes():
@@ -269,13 +270,23 @@ def charger_groupes():
                 if "organe" in brut:
                     o = brut["organe"]
                     if chaine(lire(o, "codeType")) == "GP":
-                        sigle = (chaine(lire(o, "libelleAbrev")) or chaine(lire(o, "libelleAbrege"))
-                                 or chaine(lire(o, "libelle")))
-                        GROUPES[chaine(lire(o, "uid"))] = sigle.replace(",", " ")
+                        sigle = chaine(lire(o, "libelleAbrev")) or chaine(lire(o, "libelleAbrege"))
+                        nom_long = chaine(lire(o, "libelle"))
+                        if sigle and nom_long and nom_long != sigle:
+                            etiquette = f"{sigle} - {nom_long}"
+                        else:
+                            etiquette = sigle or nom_long
+                        # Notion interdit les virgules dans une option de sélection (100 caractères max)
+                        GROUPES[chaine(lire(o, "uid"))] = etiquette.replace(",", " ")[:100]
                 elif "acteur" in brut:
                     act = brut["acteur"]
                     uid = lire(act, "uid")
                     uid = chaine(uid.get("#text")) if isinstance(uid, dict) else chaine(uid)
+                    ident = lire(act, "etatCivil", "ident") or {}
+                    nom = " ".join(x for x in (chaine(lire(ident, "civ")), chaine(lire(ident, "prenom")),
+                                               chaine(lire(ident, "nom"))) if x)
+                    if nom:
+                        NOMS[uid] = nom
                     mandats = lire(act, "mandats", "mandat") or []
                     if isinstance(mandats, dict):
                         mandats = [mandats]
@@ -285,6 +296,22 @@ def charger_groupes():
         print(f"  {len(GROUPES)} groupes, {len(GROUPE_DEPUTE)} députés rattachés")
     except Exception as e:  # le référentiel est un bonus, jamais bloquant
         print(f"  Référentiel des groupes indisponible ({e}) : propriété Groupe laissée vide")
+
+
+def auteur_principal(a):
+    """Premier signataire (porteur de l'amendement), nom complet si disponible."""
+    auteur = lire(a, "signataires", "auteur") or {}
+    nom = NOMS.get(chaine(lire(auteur, "acteurRef")))
+    if nom:
+        return nom
+    # Repli : premier nom de la liste des signataires ("M. Midy, Mme X et Mme Y" -> "M. Midy")
+    liste = html_vers_texte(lire(a, "signataires", "libelle"))
+    premier = re.split(r",| et ", liste, maxsplit=1)[0].strip()
+    if premier:
+        return premier
+    if "gouvernement" in normaliser(chaine(lire(auteur, "typeAuteur"))):
+        return "Gouvernement"
+    return ""
 
 
 def groupe(a):
@@ -308,7 +335,7 @@ def extraire(a):
                or chaine(lire(a, "pointeurFragmentTexte", "division", "titre")))
     dispositif = html_vers_texte(lire(a, "corps", "contenuAuteur", "dispositif"))
     expose = html_vers_texte(lire(a, "corps", "contenuAuteur", "exposeSommaire"))
-    auteurs = html_vers_texte(lire(a, "signataires", "libelle"))
+    auteurs = auteur_principal(a)
     date_depot = chaine(lire(a, "cycleDeVie", "dateDepot"))[:10]
 
     tags_dispositif = detecter(normaliser(" ".join([article, dispositif])))
