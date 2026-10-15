@@ -15,6 +15,7 @@ Usage :
 """
 
 import datetime as dt
+import difflib
 import hashlib
 import html
 import json
@@ -38,7 +39,7 @@ URL_DEPUTES = ("https://data.assemblee-nationale.fr/static/openData/repository/"
                "17/amo/deputes_actifs_mandats_actifs_organes/"
                "AMO10_deputes_actifs_mandats_actifs_organes.json.zip")
 NUM_TEXTE = "3210"   # PLF 2027
-JOURS_DELTA = 3      # le delta couvre les modifications des 3 derniers jours
+JOURS_DELTA = 0      # le delta ne contient que les changements du jour (0 = aujourd'hui seulement)
 TAILLE_BLOC = 1900   # limite Notion : 2000 caractères par bloc de texte
 
 DOSSIER = Path("data")
@@ -50,12 +51,22 @@ FICHIER_DELTA = DOSSIER / "delta.json"
 MOTS_CLES = {
     "CIR": [r"credits? d'impot (en faveur de la )?recherche", r"\bcir\b", r"199 ter b"],
     "CII": [r"credits? d'impot (en faveur de l')?innovation", r"\bcii\b"],
-    "Collection": [r"credits? d'impot collection", r"nouvelles collections"],
+    "CIC": [r"credits? d'impot collection", r"nouvelles collections"],
     "JEI": [r"jeunes? entreprises? innovantes?", r"\bjei\b",
             r"jeunes? entreprises? d'innovation de rupture",
             r"jeunes? entreprises? de croissance", r"44 sexies-0 a"],
-    "Art. 244 quater B": [r"244 quater b"],
+    "Art. 244 quater B": [r"244 quater b"],  # sert à la recherche, jamais affiché
 }
+
+# Étiquettes affichées dans Notion (colonne Dispositif(s))
+CREDITS_244 = ("CIR", "CII", "CIC")   # crédits d'impôt de l'article 244 quater B
+ART_244 = "Art. 244 quater B"
+
+# Rapprochement des versions d'un même amendement (commission, séance, lectures suivantes)
+SEUIL_MEME_ARTICLE = 0.85    # similarité minimale des dispositifs visant le même article
+SEUIL_AUTRE_ARTICLE = 0.95   # similarité minimale si l'article visé a changé
+LONGUEUR_MIN_AUTRE_ARTICLE = 300
+ORDRE_INSTANCE = {"Commission des finances": 0, "Commission saisie pour avis": 0, "Séance publique": 1}
 
 # Correspondance entre le sort AN et les options du select Notion.
 # L'ordre compte : le premier motif trouvé l'emporte.
@@ -151,8 +162,10 @@ P = {
     "portee": "Dht]",       # Portée
     "sort": "rZHo",         # Sort
     "date_depot": "iPRZ",   # Date de dépôt
-    "synchro": "AXfC",      # Dernière synchro
+    # "Dernière synchro" (AXfC) n'est plus alimentée : la date figure en tête de base
     "lien": "kP^I",         # Lien vers l'amendement
+    "fil": "?agS",          # Fil de suivi
+    "parcours": "}MM@",     # Parcours
 }
 
 
@@ -171,8 +184,9 @@ def proprietes_notion(f, aujourd_hui):
         P["dispositifs"]: {"multi_select": [{"name": t} for t in f["dispositifs"]]},
         P["portee"]: {"select": {"name": f["portee"]}},
         P["sort"]: {"select": {"name": f["sort"]}},
-        P["synchro"]: {"date": {"start": aujourd_hui}},
         P["lien"]: {"url": f["lien"]},
+        P["fil"]: texte(f["fil"]),
+        P["parcours"]: texte(f["parcours"]),
     }
     if f["groupe"]:
         p[P["groupe"]] = {"select": {"name": f["groupe"]}}
@@ -182,8 +196,16 @@ def proprietes_notion(f, aujourd_hui):
 
 
 def detecter(texte_normalise):
-    return [tag for tag, motifs in MOTS_CLES.items()
+    """Renvoie les dispositifs cités parmi CIR, CII, CIC et JEI.
+    L'article 244 quater B sert à repérer l'amendement mais n'est pas affiché :
+    s'il est cité sans que le crédit d'impôt soit nommé, on retient CIR par défaut."""
+    tags = [tag for tag, motifs in MOTS_CLES.items()
             if any(re.search(m, texte_normalise) for m in motifs)]
+    if ART_244 in tags:
+        tags.remove(ART_244)
+        if not any(t in tags for t in CREDITS_244):
+            tags.insert(0, "CIR")
+    return tags
 
 
 def statut(a):
@@ -277,7 +299,7 @@ def charger_groupes():
                         else:
                             etiquette = sigle or nom_long
                         # Notion interdit les virgules dans une option de sélection (100 caractères max)
-                        GROUPES[chaine(lire(o, "uid"))] = etiquette.replace(",", " ")[:100]
+                        GROUPES[chaine(lire(o, "uid"))] = re.sub(r"\s*,\s*", " ", etiquette)[:100]
                 elif "acteur" in brut:
                     act = brut["acteur"]
                     uid = lire(act, "uid")
@@ -369,8 +391,70 @@ def extraire(a):
     }
 
 
+def cle_texte(fiche):
+    """Texte du dispositif réduit à l'essentiel pour comparer deux versions :
+    sans gage financier, sans numérotation, sans ponctuation ni accents."""
+    lignes = "\n".join(fiche["dispositif_blocs"]).split("\n")
+    gage = ("perte de recettes", "due concurrence", "accise sur les tabacs", "taxe additionnelle")
+    garde = [l for l in lignes if not any(g in normaliser(l) for g in gage)]
+    t = normaliser(" ".join(garde))
+    t = re.sub(r"\b[ivx]+\s*\.\s*[-\u2013]", " ", t)  # I. -, II. -
+    t = re.sub(r"\b\d+\s*°", " ", t)                    # 1°, 2°
+    t = re.sub(r"[^a-z0-9 ]", " ", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def rattacher_versions(fiches):
+    """Regroupe les versions d'un même amendement (même texte, numéros différents)
+    et renseigne pour chacune le fil de suivi et le parcours."""
+    cles = [cle_texte(f) for f in fiches]
+    articles = [normaliser(f["article"]) for f in fiches]
+    parent = list(range(len(fiches)))
+
+    def racine(i):
+        while parent[i] != i:
+            parent[i] = parent[parent[i]]
+            i = parent[i]
+        return i
+
+    for i in range(len(fiches)):
+        for j in range(i + 1, len(fiches)):
+            a, b = cles[i], cles[j]
+            if not a or not b:
+                continue
+            if articles[i] == articles[j]:
+                seuil = SEUIL_MEME_ARTICLE
+            elif min(len(a), len(b)) >= LONGUEUR_MIN_AUTRE_ARTICLE:
+                seuil = SEUIL_AUTRE_ARTICLE
+            else:
+                continue
+            m = difflib.SequenceMatcher(None, a, b, autojunk=False)
+            if m.real_quick_ratio() >= seuil and m.quick_ratio() >= seuil and m.ratio() >= seuil:
+                parent[racine(i)] = racine(j)
+
+    familles = {}
+    for i in range(len(fiches)):
+        familles.setdefault(racine(i), []).append(fiches[i])
+    for membres in familles.values():
+        membres.sort(key=lambda f: (f["date_depot"] or "", ORDRE_INSTANCE.get(f["instance"], 9), f["numero"]))
+        fil = membres[0]["numero"]
+        # Parcours par étape : "Commission : I-CF423 (Rejeté) → Séance : I-2734 (En discussion)"
+        etapes = []
+        for f in membres:
+            etape = "Séance" if f["instance"] == "Séance publique" else "Commission"
+            if not etapes or etapes[-1][0] != etape:
+                etapes.append((etape, []))
+            etapes[-1][1].append(f"{f['numero']} ({f['sort']})")
+        parcours = " → ".join(f"{e} : {', '.join(n)}" for e, n in etapes)
+        for f in membres:
+            f["fil"] = fil
+            f["parcours"] = parcours if len(membres) > 1 else ""
+    return len([m for m in familles.values() if len(m) > 1])
+
+
 def empreinte(fiche):
-    cles = ("numero", "sort", "article", "dispositif_blocs", "expose_blocs", "auteurs", "groupe")
+    cles = ("numero", "sort", "article", "dispositif_blocs", "expose_blocs", "auteurs", "groupe",
+            "dispositifs", "fil", "parcours")
     brut = json.dumps({k: fiche[k] for k in cles}, ensure_ascii=False, sort_keys=True)
     return hashlib.md5(brut.encode("utf-8")).hexdigest()
 
@@ -407,16 +491,18 @@ def main():
                 continue
             nb_texte += 1
             fiche = extraire(a)
-            if not fiche:
-                continue
-            fiche["notion_proprietes"] = proprietes_notion(fiche, aujourd_hui)
-            fiche["empreinte"] = empreinte(fiche)
-            ancien = precedent.get(fiche["uid"])
-            if ancien and ancien.get("empreinte") == fiche["empreinte"]:
-                fiche["derniere_modif"] = ancien["derniere_modif"]
-            else:
-                fiche["derniere_modif"] = aujourd_hui
-            fiches.append(fiche)
+            if fiche:
+                fiches.append(fiche)
+
+    nb_fils = rattacher_versions(fiches)
+    for fiche in fiches:
+        fiche["notion_proprietes"] = proprietes_notion(fiche, aujourd_hui)
+        fiche["empreinte"] = empreinte(fiche)
+        ancien = precedent.get(fiche["uid"])
+        if ancien and ancien.get("empreinte") == fiche["empreinte"]:
+            fiche["derniere_modif"] = ancien["derniere_modif"]
+        else:
+            fiche["derniere_modif"] = aujourd_hui
 
     fiches.sort(key=lambda f: (f["date_depot"] or "", f["numero"]))
     limite = (dt.date.today() - dt.timedelta(days=JOURS_DELTA)).isoformat()
@@ -431,7 +517,8 @@ def main():
 
     print(f"Amendements sur le texte {NUM_TEXTE} : {nb_texte}")
     print(f"Retenus (mots-clés) : {len(fiches)} | dans le delta : {len(delta)}")
-    for tag in MOTS_CLES:
+    print(f"Amendements présents en plusieurs versions : {nb_fils}")
+    for tag in ("CIR", "CII", "CIC", "JEI"):
         print(f"  {tag} : {sum(tag in f['dispositifs'] for f in fiches)}")
 
 
