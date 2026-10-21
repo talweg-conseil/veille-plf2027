@@ -2,7 +2,10 @@ name: Veille amendements PLF 2027
 
 on:
   schedule:
-    - cron: "30 4 * * *"   # chaque jour à 4h30 UTC (6h30 heure de Paris l'été, 5h30 l'hiver)
+    # 8h30 UTC = 9h30 heure de Paris en hiver (10h30 en été),
+    # après la mise à jour quotidienne de l'open data AN (entre 8h et 9h).
+    # Make lit le résultat à 11h00 (heure de Paris).
+    - cron: "30 8 * * *"
   workflow_dispatch:         # bouton "Run workflow" pour lancer à la main
 
 permissions:
@@ -10,11 +13,11 @@ permissions:
 
 jobs:
   filtre:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -30,4 +33,5 @@ jobs:
           git config user.email "veille-bot@users.noreply.github.com"
           git add data/
           git commit -m "Mise à jour amendements $(date -u +%F)" || echo "Aucun changement"
+          git pull --rebase
           git push
