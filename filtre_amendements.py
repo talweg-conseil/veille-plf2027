@@ -38,7 +38,6 @@ URL_ZIP = ("https://data.assemblee-nationale.fr/static/openData/repository/"
 URL_DEPUTES = ("https://data.assemblee-nationale.fr/static/openData/repository/"
                "17/amo/deputes_actifs_mandats_actifs_organes/"
                "AMO10_deputes_actifs_mandats_actifs_organes.json.zip")
-NUM_TEXTE = "3210"   # PLF 2027
 JOURS_DELTA = 0      # le delta ne contient que les changements du jour (0 = aujourd'hui seulement)
 TAILLE_BLOC = 1900   # limite Notion : 2000 caractères par bloc de texte
 
@@ -46,27 +45,66 @@ DOSSIER = Path("data")
 FICHIER_BASE = DOSSIER / "amendements_plf2027.json"
 FICHIER_DELTA = DOSSIER / "delta.json"
 
+# Textes suivis. Chaque texte a son propre périmètre de recherche.
+#   credits_244 : recherche CIR, CII, CIC (article 244 quater B)
+#   jei         : recherche le statut JEI et ses dérivés (JEIR, JEC, JEU)
+#   commission_fond : préfixe des amendements de la commission saisie au fond
+TEXTES = [
+    {"num": "3210", "libelle": "PLF 2027", "prefixe_titre": "",
+     "credits_244": True, "jei": True,
+     "commission_fond": ("CF", "Commission des finances")},
+    {"num": "3211", "libelle": "PLFSS 2027", "prefixe_titre": "PLFSS · ",
+     "credits_244": False, "jei": True,
+     "commission_fond": ("AS", "Commission des affaires sociales")},
+]
+
 # Expressions recherchées, APRÈS normalisation du texte :
 # minuscules, sans accents, apostrophes droites, espaces simples.
-MOTS_CLES = {
+MOTS_CREDITS = {
     "CIR": [r"credits? d'impot (en faveur de la )?recherche", r"\bcir\b", r"199 ter b"],
     "CII": [r"credits? d'impot (en faveur de l')?innovation", r"\bcii\b"],
     "CIC": [r"credits? d'impot collection", r"nouvelles collections"],
-    "JEI": [r"jeunes? entreprises? innovantes?", r"\bjei\b",
-            r"jeunes? entreprises? d'innovation de rupture",
-            r"jeunes? entreprises? de croissance", r"44 sexies-0 a"],
-    "Art. 244 quater B": [r"244 quater b"],  # sert à la recherche, jamais affiché
 }
+REF_244 = [r"244 quater b"]          # repère l'amendement ; CIR par défaut si aucun crédit nommé
 
-# Étiquettes affichées dans Notion (colonne Dispositif(s))
-CREDITS_244 = ("CIR", "CII", "CIC")   # crédits d'impôt de l'article 244 quater B
-ART_244 = "Art. 244 quater B"
+MOTS_JEI = {
+    "JEI": [r"jeunes? entreprises? innovantes?"],
+    "JEIR": [r"jeunes? entreprises? d'innovation de rupture"],
+    "JEC": [r"jeunes? entreprises? de croissance", r"jeunes? entreprises? innovantes? de croissance"],
+    "JEU": [r"jeunes? entreprises? universitaires?"],
+    "JEII": [r"jeunes? entreprises? d'innovation a impact"],
+}
+# Sigles : recherchés en MAJUSCULES uniquement (sinon "jeu" ou "en jeu" seraient captés)
+SIGLES_JEI = {
+    "JEI": [r"\bJEI\b"],
+    "JEIR": [r"\bJEIR\b"],
+    "JEC": [r"\bJEC\b", r"\bJEIC\b"],
+    "JEU": [r"\bJEU\b"],
+    "JEII": [r"\bJEII\b"],
+}
+# Références juridiques du statut : JEI par défaut si aucun régime n'est nommé
+REF_JEI = [r"44 sexies-0 a",                  # définition de toutes les catégories (CGI)
+           r"2003-1311",                      # art. 131 loi n° 2003-1311 (exonération sociale)
+           r"199 terdecies-0 a bis"]          # réduction d'impôt des investisseurs JEI
+REF_JEIR = [r"199 terdecies-0 a ter"]         # réduction d'impôt des investisseurs JEIR
+
+# Filet pour un futur statut « jeune entreprise » encore inconnu :
+#  - un sigle en JE + 1 à 4 majuscules qui n'est pas dans la liste connue (ex. « JES ») ;
+#  - une formule de création de statut : « dites / dénommées / qualifiées de jeunes entreprises ... ».
+SIGLES_CONNUS = {"JEI", "JEIR", "JEC", "JEIC", "JEU", "JEII"}
+MOTS_MAJUSCULES_IGNORES = {"JEUX", "JEUNE", "JEUNES", "JEUDI", "JEAN", "JEANNE", "JET", "JETS", "JEE"}
+SIGLE_JE = r"\bJE[A-Z]{1,4}\b"
+FORMULES_NOUVEAU_STATUT = [r"(dites?|denommees?|qualifiees? de) \W{0,3}jeunes? entreprises? [a-z' -]{3,60}"]
+AUTRE_JE = "Autre statut JE"
+
+ORDRE_TAGS = ("CIR", "CII", "CIC", "JEI", "JEIR", "JEC", "JEU", "JEII", AUTRE_JE)
 
 # Rapprochement des versions d'un même amendement (commission, séance, lectures suivantes)
 SEUIL_MEME_ARTICLE = 0.85    # similarité minimale des dispositifs visant le même article
 SEUIL_AUTRE_ARTICLE = 0.95   # similarité minimale si l'article visé a changé
 LONGUEUR_MIN_AUTRE_ARTICLE = 300
-ORDRE_INSTANCE = {"Commission des finances": 0, "Commission saisie pour avis": 0, "Séance publique": 1}
+ORDRE_INSTANCE = {"Commission des finances": 0, "Commission des affaires sociales": 0,
+                  "Commission saisie pour avis": 0, "Séance publique": 1}
 
 # Correspondance entre le sort AN et les options du select Notion.
 # L'ordre compte : le premier motif trouvé l'emporte.
@@ -106,8 +144,18 @@ def normaliser(txt):
     txt = unicodedata.normalize("NFKD", txt or "")
     txt = "".join(c for c in txt if not unicodedata.combining(c))
     txt = txt.replace("\u2019", "'").replace("\u2018", "'").replace("`", "'")
+    txt = re.sub(r"[\u2010\u2011\u2012\u2013\u2014\u2212]", "-", txt)  # tirets typographiques -> "-"
     txt = re.sub(r"\s+", " ", txt)
     return txt.lower()
+
+
+def sans_accents(txt):
+    """Comme normaliser(), mais en conservant les majuscules (pour les sigles)."""
+    txt = unicodedata.normalize("NFKD", txt or "")
+    txt = "".join(c for c in txt if not unicodedata.combining(c))
+    txt = txt.replace("\u2019", "'").replace("\u2018", "'").replace("`", "'")
+    txt = re.sub(r"[\u2010\u2011\u2012\u2013\u2014\u2212]", "-", txt)  # tirets typographiques -> "-"
+    return re.sub(r"\s+", " ", txt)
 
 
 def html_vers_texte(h):
@@ -166,6 +214,7 @@ P = {
     "lien": "kP^I",         # Lien vers l'amendement
     "fil": "?agS",          # Fil de suivi
     "parcours": "}MM@",     # Parcours
+    "texte": "kLqF",        # Texte (PLF 2027 / PLFSS 2027)
 }
 
 
@@ -187,6 +236,7 @@ def proprietes_notion(f, aujourd_hui):
         P["lien"]: {"url": f["lien"]},
         P["fil"]: texte(f["fil"]),
         P["parcours"]: texte(f["parcours"]),
+        P["texte"]: {"select": {"name": f["texte"]}},
     }
     if f["groupe"]:
         p[P["groupe"]] = {"select": {"name": f["groupe"]}}
@@ -195,17 +245,42 @@ def proprietes_notion(f, aujourd_hui):
     return json.dumps(p, ensure_ascii=False)
 
 
-def detecter(texte_normalise):
-    """Renvoie les dispositifs cités parmi CIR, CII, CIC et JEI.
-    L'article 244 quater B sert à repérer l'amendement mais n'est pas affiché :
-    s'il est cité sans que le crédit d'impôt soit nommé, on retient CIR par défaut."""
-    tags = [tag for tag, motifs in MOTS_CLES.items()
-            if any(re.search(m, texte_normalise) for m in motifs)]
-    if ART_244 in tags:
-        tags.remove(ART_244)
-        if not any(t in tags for t in CREDITS_244):
-            tags.insert(0, "CIR")
-    return tags
+def statuts_inconnus(norm, casse):
+    """Repère un éventuel nouveau statut « jeune entreprise » non encore référencé."""
+    trouves = set()
+    for sigle in re.findall(SIGLE_JE, casse):
+        if sigle not in SIGLES_CONNUS and sigle not in MOTS_MAJUSCULES_IGNORES:
+            trouves.add(sigle)
+    for motif in FORMULES_NOUVEAU_STATUT:
+        for m in re.finditer(motif, norm):
+            expression = m.group(0)
+            if not any(re.search(p, expression) for motifs in MOTS_JEI.values() for p in motifs):
+                trouves.add(expression.strip())
+    return sorted(trouves)
+
+
+def detecter(texte, conf):
+    """Renvoie les dispositifs cités, selon le périmètre du texte suivi.
+    Les références d'articles servent à repérer l'amendement mais ne sont pas affichées :
+    article 244 quater B seul -> CIR ; article 44 sexies-0 A ou loi n° 2003-1311 seuls -> JEI."""
+    norm, casse = normaliser(texte), sans_accents(texte)
+    tags = set()
+    if conf["credits_244"]:
+        tags |= {t for t, motifs in MOTS_CREDITS.items() if any(re.search(m, norm) for m in motifs)}
+        if any(re.search(m, norm) for m in REF_244) and not tags & {"CIR", "CII", "CIC"}:
+            tags.add("CIR")
+    if conf["jei"]:
+        jei = {t for t, motifs in MOTS_JEI.items() if any(re.search(m, norm) for m in motifs)}
+        jei |= {t for t, motifs in SIGLES_JEI.items() if any(re.search(m, casse) for m in motifs)}
+        inconnus = statuts_inconnus(norm, casse)
+        if inconnus:
+            jei.add(AUTRE_JE)
+        if any(re.search(m, norm) for m in REF_JEIR) and not jei:
+            jei.add("JEIR")
+        if any(re.search(m, norm) for m in REF_JEI) and not jei:
+            jei.add("JEI")
+        tags |= jei
+    return [t for t in ORDRE_TAGS if t in tags]
 
 
 def statut(a):
@@ -222,10 +297,11 @@ def statut(a):
     return "En discussion"
 
 
-def instance(numero):
+def instance(numero, conf):
     reste = re.sub(r"^I+-", "", numero.upper())  # retire le préfixe de partie (I-, II-)
-    if reste.startswith("CF"):
-        return "Commission des finances"
+    code_fond, libelle_fond = conf["commission_fond"]
+    if reste.startswith(code_fond):
+        return libelle_fond
     if re.match(r"[A-Z]", reste):
         return "Commission saisie pour avis"
     return "Séance publique"
@@ -349,7 +425,7 @@ def groupe(a):
     return None
 
 
-def extraire(a):
+def extraire(a, conf):
     """Transforme un amendement brut AN en fiche prête pour Notion."""
     uid = chaine(lire(a, "uid"))
     numero = chaine(lire(a, "identification", "numeroLong"))
@@ -360,19 +436,22 @@ def extraire(a):
     auteurs = auteur_principal(a)
     date_depot = chaine(lire(a, "cycleDeVie", "dateDepot"))[:10]
 
-    tags_dispositif = detecter(normaliser(" ".join([article, dispositif])))
-    tags = detecter(normaliser(" ".join([article, dispositif, expose])))
+    tags_dispositif = detecter(" ".join([article, dispositif]), conf)
+    tags = detecter(" ".join([article, dispositif, expose]), conf)
     if not tags:
         return None
     portee = "Dispositif" if tags_dispositif else "Exposé seul"
+    inconnus = statuts_inconnus(normaliser(dispositif + " " + expose), sans_accents(dispositif + " " + expose)) \
+        if conf["jei"] else []
     dispositif_blocs = decouper(dispositif)
     expose_blocs = decouper(expose)
 
     return {
         "uid": uid,
-        "titre": f"{numero} · {article}".strip(" ·"),
+        "texte": conf["libelle"],
+        "titre": (conf["prefixe_titre"] + f"{numero} · {article}").strip(" ·"),
         "numero": numero,
-        "instance": instance(numero),
+        "instance": instance(numero, conf),
         "article": article,
         "auteurs": auteurs[:1900],
         "groupe": groupe(a),
@@ -384,8 +463,11 @@ def extraire(a):
         "dispositif_blocs": dispositif_blocs,
         "expose_blocs": expose_blocs,
         # Corps de page Notion prêt à l'emploi (chaîne JSON injectée telle quelle par Make)
+        "statuts_inconnus": inconnus,
         "blocs_notion": json.dumps(
-            blocs_notion("Dispositif", dispositif_blocs)
+            (blocs_notion("Statut « jeune entreprise » non référencé détecté", ["; ".join(inconnus)])
+             if inconnus else [])
+            + blocs_notion("Dispositif", dispositif_blocs)
             + blocs_notion("Exposé sommaire", expose_blocs),
             ensure_ascii=False),
     }
@@ -454,7 +536,7 @@ def rattacher_versions(fiches):
 
 def empreinte(fiche):
     cles = ("numero", "sort", "article", "dispositif_blocs", "expose_blocs", "auteurs", "groupe",
-            "dispositifs", "fil", "parcours")
+            "dispositifs", "fil", "parcours", "texte", "titre", "instance")
     brut = json.dumps({k: fiche[k] for k in cles}, ensure_ascii=False, sort_keys=True)
     return hashlib.md5(brut.encode("utf-8")).hexdigest()
 
@@ -471,11 +553,12 @@ def main():
         for f in json.loads(FICHIER_BASE.read_text(encoding="utf-8"))["amendements"]:
             precedent[f["uid"]] = f
 
-    fiches, nb_texte = [], 0
+    fiches = []
+    nb_par_texte = {c["libelle"]: 0 for c in TEXTES}
     with zipfile.ZipFile(chemin_zip) as zf:
         noms = [n for n in zf.namelist() if n.endswith(".json")]
-        # Filtre rapide sur le nom de fichier (l'UID contient "B3210P")
-        cibles = [n for n in noms if f"B{NUM_TEXTE}P" in n]
+        # Filtre rapide sur le nom de fichier (l'UID contient par exemple "B3210P")
+        cibles = [n for n in noms if any(f"B{c['num']}P" in n for c in TEXTES)]
         if not cibles:
             print("  Aucun fichier repéré par son nom, lecture complète (plus lent)...")
             cibles = noms
@@ -487,14 +570,17 @@ def main():
                 except json.JSONDecodeError:
                     continue
             a = brut.get("amendement", brut)
-            if not chaine(lire(a, "texteLegislatifRef")).endswith(f"B{NUM_TEXTE}"):
+            ref = chaine(lire(a, "texteLegislatifRef"))
+            conf = next((c for c in TEXTES if ref.endswith(f"B{c['num']}")), None)
+            if not conf:
                 continue
-            nb_texte += 1
-            fiche = extraire(a)
+            nb_par_texte[conf["libelle"]] += 1
+            fiche = extraire(a, conf)
             if fiche:
                 fiches.append(fiche)
 
-    nb_fils = rattacher_versions(fiches)
+    # Rapprochement des versions, texte par texte (jamais entre PLF et PLFSS)
+    nb_fils = sum(rattacher_versions([f for f in fiches if f["texte"] == c["libelle"]]) for c in TEXTES)
     for fiche in fiches:
         fiche["notion_proprietes"] = proprietes_notion(fiche, aujourd_hui)
         fiche["empreinte"] = empreinte(fiche)
@@ -512,14 +598,22 @@ def main():
     horodatage = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     for chemin, liste in ((FICHIER_BASE, fiches), (FICHIER_DELTA, delta)):
         chemin.write_text(json.dumps(
-            {"genere_le": horodatage, "texte": NUM_TEXTE, "nb": len(liste), "amendements": liste},
+            {"genere_le": horodatage, "textes": [c["libelle"] for c in TEXTES],
+             "nb": len(liste), "amendements": liste},
             ensure_ascii=False, indent=1), encoding="utf-8")
 
-    print(f"Amendements sur le texte {NUM_TEXTE} : {nb_texte}")
-    print(f"Retenus (mots-clés) : {len(fiches)} | dans le delta : {len(delta)}")
-    print(f"Amendements présents en plusieurs versions : {nb_fils}")
-    for tag in ("CIR", "CII", "CIC", "JEI"):
-        print(f"  {tag} : {sum(tag in f['dispositifs'] for f in fiches)}")
+    for c in TEXTES:
+        retenus = [f for f in fiches if f["texte"] == c["libelle"]]
+        print(f"{c['libelle']} (n° {c['num']}) : {nb_par_texte[c['libelle']]} amendements, "
+              f"{len(retenus)} retenus")
+        for tag in ORDRE_TAGS:
+            n = sum(tag in f["dispositifs"] for f in retenus)
+            if n:
+                print(f"  {tag} : {n}")
+    print(f"Dans le delta : {len(delta)} | amendements présents en plusieurs versions : {nb_fils}")
+    for f in fiches:
+        if f.get("statuts_inconnus"):
+            print(f"  ⚠ Statut JE non référencé dans {f['texte']} {f['numero']} : {', '.join(f['statuts_inconnus'])}")
 
 
 if __name__ == "__main__":
