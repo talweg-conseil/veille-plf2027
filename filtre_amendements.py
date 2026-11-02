@@ -14,10 +14,12 @@ Usage :
   python filtre_amendements.py chemin/vers.zip  (test sur un zip local)
 """
 
+import csv
 import datetime as dt
 import difflib
 import hashlib
 import html
+import io
 import json
 import re
 import sys
@@ -45,18 +47,32 @@ DOSSIER = Path("data")
 FICHIER_BASE = DOSSIER / "amendements_plf2027.json"
 FICHIER_DELTA = DOSSIER / "delta.json"
 
-# Textes suivis. Chaque texte a son propre périmètre de recherche.
-#   credits_244 : recherche CIR, CII, CIC (article 244 quater B)
-#   jei         : recherche le statut JEI et ses dérivés (JEIR, JEC, JEU)
-#   commission_fond : préfixe des amendements de la commission saisie au fond
-TEXTES = [
-    {"num": "3210", "libelle": "PLF 2027", "prefixe_titre": "",
+# Dossiers suivis. Chaque dossier a son propre périmètre de recherche.
+#   credits_244     : recherche CIR, CII, CIC (article 244 quater B)
+#   jei             : recherche le statut JEI et ses dérivés
+#   commission_fond : préfixe des amendements de la commission saisie au fond (AN)
+#   an_textes       : numéros de texte AN connus au départ (les lectures suivantes
+#                     sont détectées automatiquement via l'index du dossier AN)
+#   an_dossier      : identifiant du dossier AN (adresse .../dossiers/<an_dossier>)
+#   senat_dossier   : identifiant du dossier Sénat (adresse .../dossier-legislatif/<senat_dossier>.html)
+DOSSIERS = [
+    {"libelle": "PLF 2027", "prefixe_titre": "",
      "credits_244": True, "jei": True,
-     "commission_fond": ("CF", "Commission des finances")},
-    {"num": "3211", "libelle": "PLFSS 2027", "prefixe_titre": "PLFSS · ",
+     "commission_fond": ("CF", "Commission des finances"),
+     "an_textes": ["3210"], "an_dossier": "plf_2027", "senat_dossier": "pjlf2027"},
+    {"libelle": "PLFSS 2027", "prefixe_titre": "PLFSS · ",
      "credits_244": False, "jei": True,
-     "commission_fond": ("AS", "Commission des affaires sociales")},
+     "commission_fond": ("AS", "Commission des affaires sociales"),
+     "an_textes": ["3211"], "an_dossier": "plfss_2027", "senat_dossier": "plfss2027"},
 ]
+TEXTES = DOSSIERS
+
+ENTETES_HTTP = {"User-Agent": "Mozilla/5.0 (compatible; veille-amendements-talweg/1.0)"}
+URL_DOSSIER_AN = "https://www.assemblee-nationale.fr/dyn/17/dossiers/{slug}"
+URL_INDEX_DOSSIER_AN = ("https://data.assemblee-nationale.fr/static/openData/repository/"
+                        "17/dossiers_legislatifs_opendata/{ident}/libre_office.csv")
+URL_DOSSIER_SENAT = "https://www.senat.fr/dossier-legislatif/{slug}.html"
+URL_AMDTS_SENAT = "https://www.senat.fr/amendements/{session}/{num}/"
 
 # Expressions recherchées, APRÈS normalisation du texte :
 # minuscules, sans accents, apostrophes droites, espaces simples.
@@ -105,6 +121,7 @@ SEUIL_AUTRE_ARTICLE = 0.95   # similarité minimale si l'article visé a changé
 LONGUEUR_MIN_AUTRE_ARTICLE = 300
 ORDRE_INSTANCE = {"Commission des finances": 0, "Commission des affaires sociales": 0,
                   "Commission saisie pour avis": 0, "Séance publique": 1}
+ORDRE_LECTURE = {"1re lecture": 0, "CMP": 1, "Nouvelle lecture": 2, "Lecture définitive": 3}
 
 # Correspondance entre le sort AN et les options du select Notion.
 # L'ordre compte : le premier motif trouvé l'emporte.
@@ -215,6 +232,8 @@ P = {
     "fil": "?agS",          # Fil de suivi
     "parcours": "}MM@",     # Parcours
     "texte": "kLqF",        # Texte (PLF 2027 / PLFSS 2027)
+    "assemblee": "o>L;",    # Assemblée (AN / Sénat)
+    "lecture": "OhVI",      # Lecture (1re lecture, CMP, Nouvelle lecture, Lecture définitive)
 }
 
 
@@ -237,6 +256,8 @@ def proprietes_notion(f, aujourd_hui):
         P["fil"]: texte(f["fil"]),
         P["parcours"]: texte(f["parcours"]),
         P["texte"]: {"select": {"name": f["texte"]}},
+        P["assemblee"]: {"select": {"name": f["assemblee"]}},
+        P["lecture"]: {"select": {"name": f["lecture"]}},
     }
     if f["groupe"]:
         p[P["groupe"]] = {"select": {"name": f["groupe"]}}
@@ -295,6 +316,49 @@ def statut(a):
             if motif in n:
                 return libelle
     return "En discussion"
+
+
+def sort_depuis_texte(txt):
+    n = normaliser(txt)
+    for motif, libelle in SORTS:
+        if motif in n:
+            return libelle
+    return "En discussion"
+
+
+def lecture_normalisee(txt):
+    n = normaliser(txt)
+    if "mixte paritaire" in n or re.search(r"\bcmp\b", n):
+        return "CMP"
+    if "definitive" in n:
+        return "Lecture définitive"
+    if "nouvelle lecture" in n:
+        return "Nouvelle lecture"
+    return "1re lecture"
+
+
+def http_get(url, timeout=60, essais=3):
+    """GET avec quelques essais. Renvoie None si la page n'existe pas (404)."""
+    for essai in range(1, essais + 1):
+        try:
+            r = requests.get(url, headers=ENTETES_HTTP, timeout=timeout)
+            if r.status_code == 404:
+                return None
+            r.raise_for_status()
+            return r
+        except requests.RequestException:
+            if essai == essais:
+                raise
+            time.sleep(15 * essai)
+
+
+def decoder(contenu):
+    for enc in ("utf-8-sig", "cp1252"):
+        try:
+            return contenu.decode(enc)
+        except UnicodeDecodeError:
+            continue
+    return contenu.decode("cp1252", errors="replace")
 
 
 def instance(numero, conf):
@@ -425,7 +489,7 @@ def groupe(a):
     return None
 
 
-def extraire(a, conf):
+def extraire(a, conf, lecture="1re lecture", num_texte=""):
     """Transforme un amendement brut AN en fiche prête pour Notion."""
     uid = chaine(lire(a, "uid"))
     numero = chaine(lire(a, "identification", "numeroLong"))
@@ -433,8 +497,17 @@ def extraire(a, conf):
                or chaine(lire(a, "pointeurFragmentTexte", "division", "titre")))
     dispositif = html_vers_texte(lire(a, "corps", "contenuAuteur", "dispositif"))
     expose = html_vers_texte(lire(a, "corps", "contenuAuteur", "exposeSommaire"))
-    auteurs = auteur_principal(a)
-    date_depot = chaine(lire(a, "cycleDeVie", "dateDepot"))[:10]
+    return construire_fiche(
+        conf, uid=uid, numero=numero, article=article, dispositif=dispositif, expose=expose,
+        auteurs=auteur_principal(a), groupe=groupe(a), sort=statut(a),
+        date_depot=chaine(lire(a, "cycleDeVie", "dateDepot"))[:10],
+        lien=URL_AMENDEMENT.format(uid=uid), instance=instance(numero, conf),
+        assemblee="AN", lecture=lecture, num_texte=num_texte)
+
+
+def construire_fiche(conf, uid, numero, article, dispositif, expose, auteurs, groupe, sort,
+                     date_depot, lien, instance, assemblee, lecture, num_texte):
+    """Fiche commune aux amendements de l'AN et du Sénat."""
 
     tags_dispositif = detecter(" ".join([article, dispositif]), conf)
     tags = detecter(" ".join([article, dispositif, expose]), conf)
@@ -446,20 +519,24 @@ def extraire(a, conf):
     dispositif_blocs = decouper(dispositif)
     expose_blocs = decouper(expose)
 
+    prefixe = ("Sénat · " if assemblee == "Sénat" else "") + conf["prefixe_titre"]
     return {
         "uid": uid,
         "texte": conf["libelle"],
-        "titre": (conf["prefixe_titre"] + f"{numero} · {article}").strip(" ·"),
+        "assemblee": assemblee,
+        "lecture": lecture,
+        "num_texte": num_texte,
+        "titre": (prefixe + f"{numero} · {article}").strip(" ·"),
         "numero": numero,
-        "instance": instance(numero, conf),
+        "instance": instance,
         "article": article,
-        "auteurs": auteurs[:1900],
-        "groupe": groupe(a),
+        "auteurs": (auteurs or "")[:1900],
+        "groupe": groupe,
         "dispositifs": tags,
         "portee": portee,
-        "sort": statut(a),
+        "sort": sort,
         "date_depot": date_depot or None,
-        "lien": URL_AMENDEMENT.format(uid=uid),
+        "lien": lien,
         "dispositif_blocs": dispositif_blocs,
         "expose_blocs": expose_blocs,
         # Corps de page Notion prêt à l'emploi (chaîne JSON injectée telle quelle par Make)
@@ -484,6 +561,14 @@ def cle_texte(fiche):
     t = re.sub(r"\b\d+\s*°", " ", t)                    # 1°, 2°
     t = re.sub(r"[^a-z0-9 ]", " ", t)
     return re.sub(r"\s+", " ", t).strip()
+
+
+def etape_parcours(f):
+    """Ex. : "AN commission", "Sénat séance", "AN séance (Nouvelle lecture)"."""
+    lieu = "séance" if f["instance"] == "Séance publique" else "commission"
+    lecture = f.get("lecture", "1re lecture")
+    suffixe = "" if lecture == "1re lecture" else f" ({lecture})"
+    return f"{f.get('assemblee', 'AN')} {lieu}{suffixe}"
 
 
 def rattacher_versions(fiches):
@@ -518,12 +603,14 @@ def rattacher_versions(fiches):
     for i in range(len(fiches)):
         familles.setdefault(racine(i), []).append(fiches[i])
     for membres in familles.values():
-        membres.sort(key=lambda f: (f["date_depot"] or "", ORDRE_INSTANCE.get(f["instance"], 9), f["numero"]))
+        membres.sort(key=lambda f: (f["date_depot"] or "", ORDRE_LECTURE.get(f.get("lecture"), 9),
+                                    f.get("assemblee", "AN") != "AN",
+                                    ORDRE_INSTANCE.get(f["instance"], 9), f["numero"]))
         fil = membres[0]["numero"]
         # Parcours par étape : "Commission : I-CF423 (Rejeté) → Séance : I-2734 (En discussion)"
         etapes = []
         for f in membres:
-            etape = "Séance" if f["instance"] == "Séance publique" else "Commission"
+            etape = etape_parcours(f)
             if not etapes or etapes[-1][0] != etape:
                 etapes.append((etape, []))
             etapes[-1][1].append(f"{f['numero']} ({f['sort']})")
@@ -536,9 +623,109 @@ def rattacher_versions(fiches):
 
 def empreinte(fiche):
     cles = ("numero", "sort", "article", "dispositif_blocs", "expose_blocs", "auteurs", "groupe",
-            "dispositifs", "fil", "parcours", "texte", "titre", "instance")
+            "dispositifs", "fil", "parcours", "texte", "titre", "instance", "assemblee", "lecture")
     brut = json.dumps({k: fiche[k] for k in cles}, ensure_ascii=False, sort_keys=True)
     return hashlib.md5(brut.encode("utf-8")).hexdigest()
+
+
+HORS_LIGNE = False  # True en test local (zip fourni en argument) : pas d'appel réseau
+
+
+def textes_an(conf, precedent):
+    """Numéros des textes AN du dossier et lecture correspondante.
+    Source : index CSV du dossier AN (détecte CMP, nouvelle lecture, lecture définitive)."""
+    lectures = {n: "1re lecture" for n in conf["an_textes"]}
+    for f in precedent.values():  # textes déjà rencontrés les jours précédents
+        if f.get("texte") == conf["libelle"] and f.get("assemblee", "AN") == "AN" and f.get("num_texte"):
+            lectures.setdefault(f["num_texte"], f.get("lecture", "1re lecture"))
+    if HORS_LIGNE:
+        return lectures
+    try:
+        page = http_get(URL_DOSSIER_AN.format(slug=conf["an_dossier"]))
+        m = re.search(r"DLR5L17N(\d+)", page.text) if page else None
+        if not m:
+            print(f"  {conf['libelle']} : identifiant du dossier AN introuvable")
+            return lectures
+        index = http_get(URL_INDEX_DOSSIER_AN.format(ident=m.group(1)), timeout=180)
+        if index:
+            for ligne in csv.DictReader(io.StringIO(decoder(index.content))):
+                t = re.search(r"B(\d+)P", ligne.get("URL Amendement format XML") or "")
+                if t:
+                    lectures[t.group(1)] = lecture_normalisee(ligne.get("Etape du texte") or "")
+    except Exception as e:  # l'index est un complément : jamais bloquant
+        print(f"  {conf['libelle']} : index du dossier AN indisponible ({e})")
+    return lectures
+
+
+def fiches_senat_texte(conf, session, num, lecture):
+    """Lit le CSV « jeu complet » des amendements d'un texte du Sénat."""
+    base = URL_AMDTS_SENAT.format(session=session, num=num)
+    r = http_get(base + f"jeu_complet_{session}_{num}.csv", timeout=180)
+    if not r:
+        return []
+    contenu = decoder(r.content)
+    if contenu.lower().startswith("sep="):
+        contenu = contenu.split("\n", 1)[1] if "\n" in contenu else ""
+    lecteur = csv.reader(io.StringIO(contenu), delimiter="\t", quoting=csv.QUOTE_NONE)
+    entetes = [normaliser(h).strip() for h in next(lecteur, [])]
+    fiches = []
+    for ligne in lecteur:
+        d = dict(zip(entetes, ligne))
+        if normaliser(d.get("nature", "")).strip() not in ("amt", "amendement"):
+            continue
+        dispositif = html_vers_texte(d.get("dispositif"))
+        if not dispositif:
+            continue  # amendement retiré avant séance ou irrecevable sans texte
+        numero = d.get("numero", "").strip()
+        racine = re.match(r"((?:[IVX]+-)?[A-Z]*-?\d+)", numero)
+        uid = f"SENAT-{session}-{num}-{racine.group(1) if racine else numero}"
+        auteur = d.get("auteur", "").strip()
+        au_nom = d.get("au nom de", "").strip()
+        lien = d.get("url amendement", "").strip()
+        fiche = construire_fiche(
+            conf, uid=uid, numero=numero, article=d.get("subdivision", "").strip(),
+            dispositif=dispositif, expose=html_vers_texte(d.get("objet")),
+            auteurs=f"{auteur} ({au_nom})" if au_nom else auteur, groupe=None,
+            sort=sort_depuis_texte(d.get("sort", "")), date_depot=d.get("date de depot", "")[:10],
+            lien=("https:" + lien) if lien.startswith("//") else lien,
+            instance="Séance publique", assemblee="Sénat", lecture=lecture, num_texte=num)
+        if fiche:
+            fiches.append(fiche)
+    return fiches
+
+
+def collecter_senat(conf, precedent):
+    """Amendements du Sénat pour un dossier. En cas d'indisponibilité du site,
+    les fiches de la veille sont conservées telles quelles."""
+    anciennes = [f for f in precedent.values()
+                 if f.get("texte") == conf["libelle"] and f.get("assemblee") == "Sénat"]
+    if HORS_LIGNE:
+        return anciennes
+    try:
+        page = http_get(URL_DOSSIER_SENAT.format(slug=conf["senat_dossier"]))
+    except Exception as e:
+        print(f"  {conf['libelle']} : dossier Sénat indisponible ({e}), fiches de la veille conservées")
+        return anciennes
+    if not page:
+        print(f"  {conf['libelle']} : pas encore de dossier au Sénat")
+        return anciennes
+    textes = sorted(set(re.findall(r"/amendements/(\d{4}-\d{4})/(\d+)/", page.text)))
+    fiches = []
+    for session, num in textes:
+        try:
+            lecture = "1re lecture"
+            accueil = http_get(URL_AMDTS_SENAT.format(session=session, num=num) + "accueil.html")
+            if accueil:
+                t = html_vers_texte(accueil.text)
+                i = t.find("Consulter la liste")
+                lecture = lecture_normalisee(t[max(0, i - 300):i] if i > 0 else "")
+            lot = fiches_senat_texte(conf, session, num, lecture)
+            print(f"  Sénat {conf['libelle']} texte n° {num} ({session}, {lecture}) : {len(lot)} retenus")
+            fiches += lot
+        except Exception as e:
+            print(f"  Sénat {conf['libelle']} texte n° {num} indisponible ({e}), fiches de la veille conservées")
+            fiches += [f for f in anciennes if f["uid"].startswith(f"SENAT-{session}-{num}-")]
+    return fiches
 
 
 def main():
@@ -553,12 +740,23 @@ def main():
         for f in json.loads(FICHIER_BASE.read_text(encoding="utf-8"))["amendements"]:
             precedent[f["uid"]] = f
 
+    global HORS_LIGNE
+    HORS_LIGNE = len(sys.argv) > 1
+
+    # Textes AN à lire (1re lecture, puis CMP, nouvelle lecture... détectés automatiquement)
+    plan_an = {}
+    for conf in DOSSIERS:
+        for num, lecture in textes_an(conf, precedent).items():
+            plan_an[num] = (conf, lecture)
+    print("Textes AN suivis : " + ", ".join(f"n° {n} ({c['libelle']}, {l})"
+                                            for n, (c, l) in sorted(plan_an.items())))
+
     fiches = []
-    nb_par_texte = {c["libelle"]: 0 for c in TEXTES}
+    nb_par_texte = {c["libelle"]: 0 for c in DOSSIERS}
     with zipfile.ZipFile(chemin_zip) as zf:
         noms = [n for n in zf.namelist() if n.endswith(".json")]
         # Filtre rapide sur le nom de fichier (l'UID contient par exemple "B3210P")
-        cibles = [n for n in noms if any(f"B{c['num']}P" in n for c in TEXTES)]
+        cibles = [n for n in noms if any(f"B{num}P" in n for num in plan_an)]
         if not cibles:
             print("  Aucun fichier repéré par son nom, lecture complète (plus lent)...")
             cibles = noms
@@ -570,17 +768,22 @@ def main():
                 except json.JSONDecodeError:
                     continue
             a = brut.get("amendement", brut)
-            ref = chaine(lire(a, "texteLegislatifRef"))
-            conf = next((c for c in TEXTES if ref.endswith(f"B{c['num']}")), None)
-            if not conf:
+            ref = re.search(r"B(\d+)[A-Z]?$", chaine(lire(a, "texteLegislatifRef")))
+            if not ref or ref.group(1) not in plan_an:
                 continue
+            conf, lecture = plan_an[ref.group(1)]
             nb_par_texte[conf["libelle"]] += 1
-            fiche = extraire(a, conf)
+            fiche = extraire(a, conf, lecture, ref.group(1))
             if fiche:
                 fiches.append(fiche)
 
+    # Amendements du Sénat (dès que le dossier existe au Sénat)
+    print("Sénat :")
+    for conf in DOSSIERS:
+        fiches += collecter_senat(conf, precedent)
+
     # Rapprochement des versions, texte par texte (jamais entre PLF et PLFSS)
-    nb_fils = sum(rattacher_versions([f for f in fiches if f["texte"] == c["libelle"]]) for c in TEXTES)
+    nb_fils = sum(rattacher_versions([f for f in fiches if f["texte"] == c["libelle"]]) for c in DOSSIERS)
     for fiche in fiches:
         fiche["notion_proprietes"] = proprietes_notion(fiche, aujourd_hui)
         fiche["empreinte"] = empreinte(fiche)
@@ -598,14 +801,15 @@ def main():
     horodatage = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
     for chemin, liste in ((FICHIER_BASE, fiches), (FICHIER_DELTA, delta)):
         chemin.write_text(json.dumps(
-            {"genere_le": horodatage, "textes": [c["libelle"] for c in TEXTES],
+            {"genere_le": horodatage, "textes": [c["libelle"] for c in DOSSIERS],
              "nb": len(liste), "amendements": liste},
             ensure_ascii=False, indent=1), encoding="utf-8")
 
-    for c in TEXTES:
+    for c in DOSSIERS:
         retenus = [f for f in fiches if f["texte"] == c["libelle"]]
-        print(f"{c['libelle']} (n° {c['num']}) : {nb_par_texte[c['libelle']]} amendements, "
-              f"{len(retenus)} retenus")
+        nb_senat = sum(f["assemblee"] == "Sénat" for f in retenus)
+        print(f"{c['libelle']} : {nb_par_texte[c['libelle']]} amendements AN lus, "
+              f"{len(retenus)} retenus (dont {nb_senat} au Sénat)")
         for tag in ORDRE_TAGS:
             n = sum(tag in f["dispositifs"] for f in retenus)
             if n:
