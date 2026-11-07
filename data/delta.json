@@ -1,43 +1,9 @@
 {
- "genere_le": "2026-11-06T09:27:57+00:00",
+ "genere_le": "2026-11-07T09:22:20+00:00",
  "textes": [
   "PLF 2027",
   "PLFSS 2027"
  ],
- "nb": 1,
- "amendements": [
-  {
-   "uid": "AMANR5L17PO838901B3210P1D1N002963",
-   "texte": "PLF 2027",
-   "assemblee": "AN",
-   "lecture": "1re lecture",
-   "num_texte": "3210",
-   "titre": "I-2963 · APRÈS ART. 15",
-   "numero": "I-2963",
-   "instance": "Séance publique",
-   "article": "APRÈS ART. 15",
-   "auteurs": "M. Marc Chavent",
-   "groupe": "UDR - Union des droites pour la République",
-   "dispositifs": [
-    "CII"
-   ],
-   "portee": "Dispositif",
-   "sort": "Retiré",
-   "date_depot": "2026-10-10",
-   "lien": "https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P1D1N002963",
-   "dispositif_blocs": [
-    "I. – Le k du II de l’article 244 quater B du code général des impôts est ainsi modifié :\n1° Au premier alinéa, la date : « 31 décembre 2027 » est remplacée par la date : « 31 décembre 2030 » ;\n2° Le huitième alinéa est complété par les mots : « , portée à 800 000 € pour les entreprises qui exercent une activité concourant directement à la fabrication ou à la transformation de biens corporels mobiliers et pour laquelle le rôle du matériel et de l’outillage est prépondérant ».\nII. – La perte de recettes pour l’État est compensée à due concurrence par la création d’une taxe additionnelle à l’accise sur les tabacs prévue au chapitre IV du titre Ier du livre III du code des impositions sur les biens et services."
-   ],
-   "expose_blocs": [
-    "Des industries comme la lunetterie ou la plasturgie technique ne se maintiennent que par la montée en gamme, laquelle suppose la conception de prototypes, le dépôt de dessins et modèles puis la qualification de nouvelles références. Le crédit d’impôt innovation finance précisément ces dépenses dans la limite actuelle de 400 000 € par an.\nCe plafond est atteint dès le premier projet sérieux de nouvelle gamme, de sorte que l’entreprise qui mène deux programmes la même année supporte seule le second. L’échéance fixée au 31 décembre 2027 ajoute une incertitude de calendrier à des programmes dont le développement dépasse souvent deux exercices.\nLe présent amendement porte le plafond annuel à 800 000 € pour les entreprises industrielles et proroge le dispositif jusqu’au 31 décembre 2030."
-   ],
-   "statuts_inconnus": [],
-   "blocs_notion": "[{\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Dispositif\"}}]}}, {\"object\": \"block\", \"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"I. – Le k du II de l’article 244 quater B du code général des impôts est ainsi modifié :\\n1° Au premier alinéa, la date : « 31 décembre 2027 » est remplacée par la date : « 31 décembre 2030 » ;\\n2° Le huitième alinéa est complété par les mots : « , portée à 800 000 € pour les entreprises qui exercent une activité concourant directement à la fabrication ou à la transformation de biens corporels mobiliers et pour laquelle le rôle du matériel et de l’outillage est prépondérant ».\\nII. – La perte de recettes pour l’État est compensée à due concurrence par la création d’une taxe additionnelle à l’accise sur les tabacs prévue au chapitre IV du titre Ier du livre III du code des impositions sur les biens et services.\"}}]}}, {\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Exposé sommaire\"}}]}}, {\"object\": \"block\", \"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Des industries comme la lunetterie ou la plasturgie technique ne se maintiennent que par la montée en gamme, laquelle suppose la conception de prototypes, le dépôt de dessins et modèles puis la qualification de nouvelles références. Le crédit d’impôt innovation finance précisément ces dépenses dans la limite actuelle de 400 000 € par an.\\nCe plafond est atteint dès le premier projet sérieux de nouvelle gamme, de sorte que l’entreprise qui mène deux programmes la même année supporte seule le second. L’échéance fixée au 31 décembre 2027 ajoute une incertitude de calendrier à des programmes dont le développement dépasse souvent deux exercices.\\nLe présent amendement porte le plafond annuel à 800 000 € pour les entreprises industrielles et proroge le dispositif jusqu’au 31 décembre 2030.\"}}]}}]",
-   "fil": "I-2963",
-   "parcours": "",
-   "notion_proprietes": "{\"title\": {\"title\": [{\"text\": {\"content\": \"I-2963 · APRÈS ART. 15\"}}]}, \"cKIo\": {\"rich_text\": [{\"text\": {\"content\": \"AMANR5L17PO838901B3210P1D1N002963\"}}]}, \"V|zK\": {\"rich_text\": [{\"text\": {\"content\": \"I-2963\"}}]}, \"LYp=\": {\"select\": {\"name\": \"Séance publique\"}}, \"<>Iq\": {\"rich_text\": [{\"text\": {\"content\": \"APRÈS ART. 15\"}}]}, \"_\\\\gF\": {\"rich_text\": [{\"text\": {\"content\": \"M. Marc Chavent\"}}]}, \"vmP_\": {\"multi_select\": [{\"name\": \"CII\"}]}, \"Dht]\": {\"select\": {\"name\": \"Dispositif\"}}, \"rZHo\": {\"select\": {\"name\": \"Retiré\"}}, \"kP^I\": {\"url\": \"https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P1D1N002963\"}, \"?agS\": {\"rich_text\": [{\"text\": {\"content\": \"I-2963\"}}]}, \"}MM@\": {\"rich_text\": [{\"text\": {\"content\": \"\"}}]}, \"kLqF\": {\"select\": {\"name\": \"PLF 2027\"}}, \"o>L;\": {\"select\": {\"name\": \"AN\"}}, \"OhVI\": {\"select\": {\"name\": \"1re lecture\"}}, \"q}iE\": {\"select\": {\"name\": \"UDR - Union des droites pour la République\"}}, \"iPRZ\": {\"date\": {\"start\": \"2026-10-10\"}}}",
-   "empreinte": "ec944761a832b698653c2f9f5a5802d5",
-   "derniere_modif": "2026-11-06"
-  }
- ]
+ "nb": 0,
+ "amendements": []
 }
