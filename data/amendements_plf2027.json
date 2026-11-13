@@ -1,10 +1,10 @@
 {
- "genere_le": "2026-11-12T17:10:50+00:00",
+ "genere_le": "2026-11-13T16:48:34+00:00",
  "textes": [
   "PLF 2027",
   "PLFSS 2027"
  ],
- "nb": 132,
+ "nb": 136,
  "amendements": [
   {
    "uid": "AMANR5L17PO59048B3210P1D1N000136",
@@ -4243,6 +4243,39 @@
    "derniere_modif": "2026-11-02"
   },
   {
+   "uid": "AMANR5L17PO838901B3210P2D1N001978",
+   "texte": "PLF 2027",
+   "assemblee": "AN",
+   "lecture": "1re lecture",
+   "num_texte": "3210",
+   "titre": "II-1978 · ART. 58",
+   "numero": "II-1978",
+   "instance": "Séance publique",
+   "article": "ART. 58",
+   "auteurs": "M. Karim Ben Cheikh",
+   "groupe": "ECOS - Écologiste et Social",
+   "dispositifs": [
+    "Autre statut JE"
+   ],
+   "portee": "Exposé seul",
+   "sort": "En discussion",
+   "date_depot": "2026-10-30",
+   "lien": "https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N001978",
+   "dispositif_blocs": [],
+   "expose_blocs": [
+    "Chaque année, le ministère de l’Europe et des Affaires étrangères (MEAE) finance des postes de Jeunes experts associés (JEA) au sein du système des Nations unies. Ce programme offre à de jeunes professionnels qualifiés l’opportunité d’acquérir une expérience concrète du multilatéralisme et de contribuer aux grands enjeux internationaux au sein d’équipes multiculturelles.\nLe projet de loi de finances pour 2027 prévoit d’allouer 4,31 millions d’euros aux JEA contre 4,8 millions d’euros en loi de finances pour 2026. Cette enveloppe n’a cessé de faire les frais des coupes budgétaires successibles. En loi de finances pour 2024, elle s’établissait à 9,72 millions d’euros.\nPour cette dotation permet à la France de cibler des postes alignés sur les priorités de notre pays au sein des entités onusiennes. Elle permet d’assurer la présence de jeunes professionnels français dans les institutions internationales et d’aligner les embauches avec nos priorités dans le système multilatéral. Actuellement, elle ne permet que de rémunérer 10 nouveaux JEA, ce qui est peu.\nLe rapporteur spécial propose de revenir au montant fixé en 2024.\nEn conséquence et afin de respecter les règles de recevabilité financière, le présent amendement propose de transférer 5,41 millions d’euros en AE et en CP de l’action 08 – Appui au réseau culturel et de coopération du programme 185 – Diplomatie culturelle et d'influence vers l’action 04 – Contributions internationales du programme 105 – Action de la France en Europe et dans le monde.\nLe Gouvernement est appelé à rétablir les crédits prélevés en cas d’adoption."
+   ],
+   "statuts_inconnus": [
+    "JEA"
+   ],
+   "blocs_notion": "[{\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Statut « jeune entreprise » non référencé détecté\"}}]}}, {\"object\": \"block\", \"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"JEA\"}}]}}, {\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Dispositif\"}}]}}, {\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Exposé sommaire\"}}]}}, {\"object\": \"block\", \"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Chaque année, le ministère de l’Europe et des Affaires étrangères (MEAE) finance des postes de Jeunes experts associés (JEA) au sein du système des Nations unies. Ce programme offre à de jeunes professionnels qualifiés l’opportunité d’acquérir une expérience concrète du multilatéralisme et de contribuer aux grands enjeux internationaux au sein d’équipes multiculturelles.\\nLe projet de loi de finances pour 2027 prévoit d’allouer 4,31 millions d’euros aux JEA contre 4,8 millions d’euros en loi de finances pour 2026. Cette enveloppe n’a cessé de faire les frais des coupes budgétaires successibles. En loi de finances pour 2024, elle s’établissait à 9,72 millions d’euros.\\nPour cette dotation permet à la France de cibler des postes alignés sur les priorités de notre pays au sein des entités onusiennes. Elle permet d’assurer la présence de jeunes professionnels français dans les institutions internationales et d’aligner les embauches avec nos priorités dans le système multilatéral. Actuellement, elle ne permet que de rémunérer 10 nouveaux JEA, ce qui est peu.\\nLe rapporteur spécial propose de revenir au montant fixé en 2024.\\nEn conséquence et afin de respecter les règles de recevabilité financière, le présent amendement propose de transférer 5,41 millions d’euros en AE et en CP de l’action 08 – Appui au réseau culturel et de coopération du programme 185 – Diplomatie culturelle et d'influence vers l’action 04 – Contributions internationales du programme 105 – Action de la France en Europe et dans le monde.\\nLe Gouvernement est appelé à rétablir les crédits prélevés en cas d’adoption.\"}}]}}]",
+   "fil": "II-1978",
+   "parcours": "",
+   "notion_proprietes": "{\"title\": {\"title\": [{\"text\": {\"content\": \"II-1978 · ART. 58\"}}]}, \"cKIo\": {\"rich_text\": [{\"text\": {\"content\": \"AMANR5L17PO838901B3210P2D1N001978\"}}]}, \"V|zK\": {\"rich_text\": [{\"text\": {\"content\": \"II-1978\"}}]}, \"LYp=\": {\"select\": {\"name\": \"Séance publique\"}}, \"<>Iq\": {\"rich_text\": [{\"text\": {\"content\": \"ART. 58\"}}]}, \"_\\\\gF\": {\"rich_text\": [{\"text\": {\"content\": \"M. Karim Ben Cheikh\"}}]}, \"vmP_\": {\"multi_select\": [{\"name\": \"Autre statut JE\"}]}, \"Dht]\": {\"select\": {\"name\": \"Exposé seul\"}}, \"rZHo\": {\"select\": {\"name\": \"En discussion\"}}, \"kP^I\": {\"url\": \"https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N001978\"}, \"?agS\": {\"rich_text\": [{\"text\": {\"content\": \"II-1978\"}}]}, \"}MM@\": {\"rich_text\": [{\"text\": {\"content\": \"\"}}]}, \"kLqF\": {\"select\": {\"name\": \"PLF 2027\"}}, \"o>L;\": {\"select\": {\"name\": \"AN\"}}, \"OhVI\": {\"select\": {\"name\": \"1re lecture\"}}, \"q}iE\": {\"select\": {\"name\": \"ECOS - Écologiste et Social\"}}, \"iPRZ\": {\"date\": {\"start\": \"2026-10-30\"}}}",
+   "empreinte": "2125c02ec4de233f2959f748f6760d7c",
+   "derniere_modif": "2026-11-13"
+  },
+  {
    "uid": "AMANR5L17PO838901B3210P2D1N002416",
    "texte": "PLF 2027",
    "assemblee": "AN",
@@ -4446,6 +4479,101 @@
    "notion_proprietes": "{\"title\": {\"title\": [{\"text\": {\"content\": \"II-2762 · ART. 58\"}}]}, \"cKIo\": {\"rich_text\": [{\"text\": {\"content\": \"AMANR5L17PO838901B3210P2D1N002762\"}}]}, \"V|zK\": {\"rich_text\": [{\"text\": {\"content\": \"II-2762\"}}]}, \"LYp=\": {\"select\": {\"name\": \"Séance publique\"}}, \"<>Iq\": {\"rich_text\": [{\"text\": {\"content\": \"ART. 58\"}}]}, \"_\\\\gF\": {\"rich_text\": [{\"text\": {\"content\": \"M. Louis Boyard\"}}]}, \"vmP_\": {\"multi_select\": [{\"name\": \"Autre statut JE\"}]}, \"Dht]\": {\"select\": {\"name\": \"Exposé seul\"}}, \"rZHo\": {\"select\": {\"name\": \"En discussion\"}}, \"kP^I\": {\"url\": \"https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N002762\"}, \"?agS\": {\"rich_text\": [{\"text\": {\"content\": \"II-2762\"}}]}, \"}MM@\": {\"rich_text\": [{\"text\": {\"content\": \"\"}}]}, \"kLqF\": {\"select\": {\"name\": \"PLF 2027\"}}, \"o>L;\": {\"select\": {\"name\": \"AN\"}}, \"OhVI\": {\"select\": {\"name\": \"1re lecture\"}}, \"q}iE\": {\"select\": {\"name\": \"LFI-NFP - La France insoumise - Nouveau Front Populaire\"}}, \"iPRZ\": {\"date\": {\"start\": \"2026-11-03\"}}}",
    "empreinte": "6c988419bc82845cd137b5a9bbc60a29",
    "derniere_modif": "2026-11-10"
+  },
+  {
+   "uid": "AMANR5L17PO838901B3210P2D1N003194",
+   "texte": "PLF 2027",
+   "assemblee": "AN",
+   "lecture": "1re lecture",
+   "num_texte": "3210",
+   "titre": "II-3194 · ART. 58",
+   "numero": "II-3194",
+   "instance": "Séance publique",
+   "article": "ART. 58",
+   "auteurs": "M. Karim Ben Cheikh",
+   "groupe": "ECOS - Écologiste et Social",
+   "dispositifs": [
+    "Autre statut JE"
+   ],
+   "portee": "Exposé seul",
+   "sort": "En discussion",
+   "date_depot": "2026-11-04",
+   "lien": "https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N003194",
+   "dispositif_blocs": [],
+   "expose_blocs": [
+    "Chaque année, le ministère de l’Europe et des Affaires étrangères (MEAE) finance des postes de Jeunes experts associés (JEA) au sein du système des Nations unies. Ce programme offre à de jeunes professionnels qualifiés l’opportunité d’acquérir une expérience concrète du multilatéralisme et de contribuer aux grands enjeux internationaux au sein d’équipes multiculturelles.\nLe projet de loi de finances pour 2027 prévoit d’allouer 4,31 millions d’euros aux JEA contre 4,8 millions d’euros en loi de finances pour 2026. Cette enveloppe n’a cessé de faire les frais des coupes budgétaires successibles. En loi de finances pour 2024, elle s’établissait à 9,72 millions d’euros.\nPour cette dotation permet à la France de cibler des postes alignés sur les priorités de notre pays au sein des entités onusiennes. Elle permet d’assurer la présence de jeunes professionnels français dans les institutions internationales et d’aligner les embauches avec nos priorités dans le système multilatéral. Actuellement, elle ne permet que de rémunérer 10 nouveaux JEA, ce qui est peu.\nLe rapporteur spécial propose de revenir au montant fixé en 2024.\nEn conséquence et afin de respecter les règles de recevabilité financière, le présent amendement propose de transférer 5,41 millions d’euros en AE et en CP de l’action 08 – Appui au réseau culturel et de coopération du programme 185 – Diplomatie culturelle et d'influence vers l’action 04 – Contributions internationales du programme 105 – Action de la France en Europe et dans le monde.\nLe rapporteur spécial appelle le Gouvernement à rétablir les crédits prélevés en cas d’adoption."
+   ],
+   "statuts_inconnus": [
+    "JEA"
+   ],
+   "blocs_notion": "[{\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Statut « jeune entreprise » non référencé détecté\"}}]}}, {\"object\": \"block\", \"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"JEA\"}}]}}, {\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Dispositif\"}}]}}, {\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Exposé sommaire\"}}]}}, {\"object\": \"block\", \"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Chaque année, le ministère de l’Europe et des Affaires étrangères (MEAE) finance des postes de Jeunes experts associés (JEA) au sein du système des Nations unies. Ce programme offre à de jeunes professionnels qualifiés l’opportunité d’acquérir une expérience concrète du multilatéralisme et de contribuer aux grands enjeux internationaux au sein d’équipes multiculturelles.\\nLe projet de loi de finances pour 2027 prévoit d’allouer 4,31 millions d’euros aux JEA contre 4,8 millions d’euros en loi de finances pour 2026. Cette enveloppe n’a cessé de faire les frais des coupes budgétaires successibles. En loi de finances pour 2024, elle s’établissait à 9,72 millions d’euros.\\nPour cette dotation permet à la France de cibler des postes alignés sur les priorités de notre pays au sein des entités onusiennes. Elle permet d’assurer la présence de jeunes professionnels français dans les institutions internationales et d’aligner les embauches avec nos priorités dans le système multilatéral. Actuellement, elle ne permet que de rémunérer 10 nouveaux JEA, ce qui est peu.\\nLe rapporteur spécial propose de revenir au montant fixé en 2024.\\nEn conséquence et afin de respecter les règles de recevabilité financière, le présent amendement propose de transférer 5,41 millions d’euros en AE et en CP de l’action 08 – Appui au réseau culturel et de coopération du programme 185 – Diplomatie culturelle et d'influence vers l’action 04 – Contributions internationales du programme 105 – Action de la France en Europe et dans le monde.\\nLe rapporteur spécial appelle le Gouvernement à rétablir les crédits prélevés en cas d’adoption.\"}}]}}]",
+   "fil": "II-3194",
+   "parcours": "",
+   "notion_proprietes": "{\"title\": {\"title\": [{\"text\": {\"content\": \"II-3194 · ART. 58\"}}]}, \"cKIo\": {\"rich_text\": [{\"text\": {\"content\": \"AMANR5L17PO838901B3210P2D1N003194\"}}]}, \"V|zK\": {\"rich_text\": [{\"text\": {\"content\": \"II-3194\"}}]}, \"LYp=\": {\"select\": {\"name\": \"Séance publique\"}}, \"<>Iq\": {\"rich_text\": [{\"text\": {\"content\": \"ART. 58\"}}]}, \"_\\\\gF\": {\"rich_text\": [{\"text\": {\"content\": \"M. Karim Ben Cheikh\"}}]}, \"vmP_\": {\"multi_select\": [{\"name\": \"Autre statut JE\"}]}, \"Dht]\": {\"select\": {\"name\": \"Exposé seul\"}}, \"rZHo\": {\"select\": {\"name\": \"En discussion\"}}, \"kP^I\": {\"url\": \"https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N003194\"}, \"?agS\": {\"rich_text\": [{\"text\": {\"content\": \"II-3194\"}}]}, \"}MM@\": {\"rich_text\": [{\"text\": {\"content\": \"\"}}]}, \"kLqF\": {\"select\": {\"name\": \"PLF 2027\"}}, \"o>L;\": {\"select\": {\"name\": \"AN\"}}, \"OhVI\": {\"select\": {\"name\": \"1re lecture\"}}, \"q}iE\": {\"select\": {\"name\": \"ECOS - Écologiste et Social\"}}, \"iPRZ\": {\"date\": {\"start\": \"2026-11-04\"}}}",
+   "empreinte": "16bf22dd4f01b9742dbe40c8c2b1c776",
+   "derniere_modif": "2026-11-13"
+  },
+  {
+   "uid": "AMANR5L17PO838901B3210P2D1N003330",
+   "texte": "PLF 2027",
+   "assemblee": "AN",
+   "lecture": "1re lecture",
+   "num_texte": "3210",
+   "titre": "II-3330 · ART. 58",
+   "numero": "II-3330",
+   "instance": "Séance publique",
+   "article": "ART. 58",
+   "auteurs": "M. Michel Guiniot",
+   "groupe": "RN - Rassemblement National",
+   "dispositifs": [
+    "CIR"
+   ],
+   "portee": "Exposé seul",
+   "sort": "En discussion",
+   "date_depot": "2026-11-04",
+   "lien": "https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N003330",
+   "dispositif_blocs": [],
+   "expose_blocs": [
+    "Le présent amendement prévoit de minorer d'un montant de 36 094 959 euros en autorisations d’engagement, et de 36 088 469 euros en crédits de paiement, l'action n° 11 : « Accueil des étrangers primo arrivants » ainsi que pour l'action n° 12 : « Intégration des étrangers primo-arrivants » du programme n° 104 : « Intégration et accès à la nationalité française ».\nSelon l'indicateur 1.2, la part de signataires du contrat d'intégration républicaine ayant déclaré rechercher un emploi lors du premier entretien à l'OFII, inscrits à France Travail la même année que la signature du CIR est en baisse, parmi les signataires non dispensés.\nLe parcours d'orientation vers l'emploi est donc respecté par l'État français, mais les démarches de recherche d'emploi ne le sont pas par les migrants étrangers. \nDe plus, selon l'indicateur 1.3, la part de signataires du CIR ayant accédé à un emploi n'est pas en hausse cette année, donc la part d'étrangers qui vient bénéficier des aides en France sans s'investir dans un emploi est constante, malgré les 350 millions d'euros alloués annuellement à l'accueil et l'intégration des étrangers primo-arrivants. Toujours selon cet indicateur, de fausses informations sur la situation professionnelle étaient données en masse aux agents de l'OFII au point où certains indicateurs ont été supprimés cette année. \nEn conséquence, il est proposé de réduire de 10% les crédits alloués à ces deux actions, qui ne sont manifestement pas dirigés vers les bonnes personnes."
+   ],
+   "statuts_inconnus": [],
+   "blocs_notion": "[{\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Dispositif\"}}]}}, {\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Exposé sommaire\"}}]}}, {\"object\": \"block\", \"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Le présent amendement prévoit de minorer d'un montant de 36 094 959 euros en autorisations d’engagement, et de 36 088 469 euros en crédits de paiement, l'action n° 11 : « Accueil des étrangers primo arrivants » ainsi que pour l'action n° 12 : « Intégration des étrangers primo-arrivants » du programme n° 104 : « Intégration et accès à la nationalité française ».\\nSelon l'indicateur 1.2, la part de signataires du contrat d'intégration républicaine ayant déclaré rechercher un emploi lors du premier entretien à l'OFII, inscrits à France Travail la même année que la signature du CIR est en baisse, parmi les signataires non dispensés.\\nLe parcours d'orientation vers l'emploi est donc respecté par l'État français, mais les démarches de recherche d'emploi ne le sont pas par les migrants étrangers. \\nDe plus, selon l'indicateur 1.3, la part de signataires du CIR ayant accédé à un emploi n'est pas en hausse cette année, donc la part d'étrangers qui vient bénéficier des aides en France sans s'investir dans un emploi est constante, malgré les 350 millions d'euros alloués annuellement à l'accueil et l'intégration des étrangers primo-arrivants. Toujours selon cet indicateur, de fausses informations sur la situation professionnelle étaient données en masse aux agents de l'OFII au point où certains indicateurs ont été supprimés cette année. \\nEn conséquence, il est proposé de réduire de 10% les crédits alloués à ces deux actions, qui ne sont manifestement pas dirigés vers les bonnes personnes.\"}}]}}]",
+   "fil": "II-3330",
+   "parcours": "",
+   "notion_proprietes": "{\"title\": {\"title\": [{\"text\": {\"content\": \"II-3330 · ART. 58\"}}]}, \"cKIo\": {\"rich_text\": [{\"text\": {\"content\": \"AMANR5L17PO838901B3210P2D1N003330\"}}]}, \"V|zK\": {\"rich_text\": [{\"text\": {\"content\": \"II-3330\"}}]}, \"LYp=\": {\"select\": {\"name\": \"Séance publique\"}}, \"<>Iq\": {\"rich_text\": [{\"text\": {\"content\": \"ART. 58\"}}]}, \"_\\\\gF\": {\"rich_text\": [{\"text\": {\"content\": \"M. Michel Guiniot\"}}]}, \"vmP_\": {\"multi_select\": [{\"name\": \"CIR\"}]}, \"Dht]\": {\"select\": {\"name\": \"Exposé seul\"}}, \"rZHo\": {\"select\": {\"name\": \"En discussion\"}}, \"kP^I\": {\"url\": \"https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N003330\"}, \"?agS\": {\"rich_text\": [{\"text\": {\"content\": \"II-3330\"}}]}, \"}MM@\": {\"rich_text\": [{\"text\": {\"content\": \"\"}}]}, \"kLqF\": {\"select\": {\"name\": \"PLF 2027\"}}, \"o>L;\": {\"select\": {\"name\": \"AN\"}}, \"OhVI\": {\"select\": {\"name\": \"1re lecture\"}}, \"q}iE\": {\"select\": {\"name\": \"RN - Rassemblement National\"}}, \"iPRZ\": {\"date\": {\"start\": \"2026-11-04\"}}}",
+   "empreinte": "b1276b927bbb7f1221da2a1825c5d8a6",
+   "derniere_modif": "2026-11-13"
+  },
+  {
+   "uid": "AMANR5L17PO838901B3210P2D1N003331",
+   "texte": "PLF 2027",
+   "assemblee": "AN",
+   "lecture": "1re lecture",
+   "num_texte": "3210",
+   "titre": "II-3331 · ART. 58",
+   "numero": "II-3331",
+   "instance": "Séance publique",
+   "article": "ART. 58",
+   "auteurs": "M. Michel Guiniot",
+   "groupe": "RN - Rassemblement National",
+   "dispositifs": [
+    "CIR"
+   ],
+   "portee": "Exposé seul",
+   "sort": "En discussion",
+   "date_depot": "2026-11-04",
+   "lien": "https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N003331",
+   "dispositif_blocs": [],
+   "expose_blocs": [
+    "Le présent amendement prévoit de minorer d'un montant de 21 085 309 euros en autorisations d’engagement, et de 21 072 329 euros en crédits de paiement, l'action n° 12 : « Intégration des étrangers primo-arrivants » du programme n° 104 : « Intégration et accès à la nationalité française ».\nCet amendement réduit de 20% des crédits accordés à l'intégration des étrangers primo-arrivants puisque, selon les données de la Direction générale des étrangers en France (IM n°116, 9 avril 2025), \"80% des primo-arrivants soumis au CIR en signent un\".\nCes données n'ayant pas été mises à jour, on peut considérer qu'elles sont autant d'actualité que l'an passé.\nEn conséquence, il convient d'en déduire que 20% des étrangers primo-arrivants soumis au contrat d'intégration républicaine n'ont pas la volonté de s'intégrer, et donc que 20% des crédits alloués à cette action sont mal fléchés."
+   ],
+   "statuts_inconnus": [],
+   "blocs_notion": "[{\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Dispositif\"}}]}}, {\"object\": \"block\", \"type\": \"heading_3\", \"heading_3\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Exposé sommaire\"}}]}}, {\"object\": \"block\", \"type\": \"paragraph\", \"paragraph\": {\"rich_text\": [{\"type\": \"text\", \"text\": {\"content\": \"Le présent amendement prévoit de minorer d'un montant de 21 085 309 euros en autorisations d’engagement, et de 21 072 329 euros en crédits de paiement, l'action n° 12 : « Intégration des étrangers primo-arrivants » du programme n° 104 : « Intégration et accès à la nationalité française ».\\nCet amendement réduit de 20% des crédits accordés à l'intégration des étrangers primo-arrivants puisque, selon les données de la Direction générale des étrangers en France (IM n°116, 9 avril 2025), \\\"80% des primo-arrivants soumis au CIR en signent un\\\".\\nCes données n'ayant pas été mises à jour, on peut considérer qu'elles sont autant d'actualité que l'an passé.\\nEn conséquence, il convient d'en déduire que 20% des étrangers primo-arrivants soumis au contrat d'intégration républicaine n'ont pas la volonté de s'intégrer, et donc que 20% des crédits alloués à cette action sont mal fléchés.\"}}]}}]",
+   "fil": "II-3331",
+   "parcours": "",
+   "notion_proprietes": "{\"title\": {\"title\": [{\"text\": {\"content\": \"II-3331 · ART. 58\"}}]}, \"cKIo\": {\"rich_text\": [{\"text\": {\"content\": \"AMANR5L17PO838901B3210P2D1N003331\"}}]}, \"V|zK\": {\"rich_text\": [{\"text\": {\"content\": \"II-3331\"}}]}, \"LYp=\": {\"select\": {\"name\": \"Séance publique\"}}, \"<>Iq\": {\"rich_text\": [{\"text\": {\"content\": \"ART. 58\"}}]}, \"_\\\\gF\": {\"rich_text\": [{\"text\": {\"content\": \"M. Michel Guiniot\"}}]}, \"vmP_\": {\"multi_select\": [{\"name\": \"CIR\"}]}, \"Dht]\": {\"select\": {\"name\": \"Exposé seul\"}}, \"rZHo\": {\"select\": {\"name\": \"En discussion\"}}, \"kP^I\": {\"url\": \"https://www.assemblee-nationale.fr/dyn/17/amendements/AMANR5L17PO838901B3210P2D1N003331\"}, \"?agS\": {\"rich_text\": [{\"text\": {\"content\": \"II-3331\"}}]}, \"}MM@\": {\"rich_text\": [{\"text\": {\"content\": \"\"}}]}, \"kLqF\": {\"select\": {\"name\": \"PLF 2027\"}}, \"o>L;\": {\"select\": {\"name\": \"AN\"}}, \"OhVI\": {\"select\": {\"name\": \"1re lecture\"}}, \"q}iE\": {\"select\": {\"name\": \"RN - Rassemblement National\"}}, \"iPRZ\": {\"date\": {\"start\": \"2026-11-04\"}}}",
+   "empreinte": "2453479e126041b6ae5883d9ee455576",
+   "derniere_modif": "2026-11-13"
   }
  ]
 }
